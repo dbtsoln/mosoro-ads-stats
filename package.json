@@ -1,0 +1,37 @@
+{
+  "name": "mosoro-ads-stats",
+  "version": "1.0.0",
+  "description": "VK Ads statistics collection service",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "tsx migrations/run-migrations.ts",
+    "debug:fast-stats": "tsx scripts/debug-fast-stats.ts",
+    "monitor:fast-stats": "tsx scripts/monitor-fast-stats.ts",
+    "docker:build": "docker build -t mosoro-ads-stats .",
+    "docker:run": "docker run --env-file .env mosoro-ads-stats"
+  },
+  "keywords": [
+    "vk-ads",
+    "statistics",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^8.11.3",
+    "dotenv": "^16.4.1",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.10.9",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.7.0"
+  }
+}
