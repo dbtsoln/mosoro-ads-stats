@@ -23,12 +23,29 @@ export class TokenManager {
   private readonly clientId: string;
   private readonly clientSecret: string;
 
-  constructor(clientId: string, clientSecret: string, cacheDir: string = '.') {
+  constructor(clientId: string, clientSecret: string, cacheDir: string = './data') {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.tokenCachePath = join(cacheDir, '.token-cache.json');
 
+    // Ensure cache directory exists
+    this.ensureCacheDir(cacheDir);
     this.loadTokenFromCache();
+  }
+
+  private ensureCacheDir(dir: string): void {
+    try {
+      const { mkdirSync, existsSync } = require('fs');
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+        logger.info('Created cache directory', { dir });
+      }
+    } catch (error) {
+      logger.warn('Failed to create cache directory', {
+        dir,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   private loadTokenFromCache(): void {

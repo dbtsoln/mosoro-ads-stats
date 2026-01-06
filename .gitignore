@@ -8,8 +8,8 @@ dist/
 .env
 .env.local
 
-# Token cache
-.token-cache.json
+# Data directory (mounted as volume in Docker, stores token cache)
+data/
 
 # Logs
 logs/

@@ -6,6 +6,11 @@ services:
 
     env_file:
       - .env
+
+    volumes:
+      # Mount data directory for token cache and other persistent data
+      - ./data:/app/data
+
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -18,4 +23,3 @@ services:
 
 networks:
   dokploy-network:
-    external: true
