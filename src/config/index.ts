@@ -4,7 +4,12 @@ dotenv.config();
 
 export const config = {
   vkAds: {
-    apiToken: process.env.VK_ADS_API_TOKEN!,
+    // OAuth2 credentials
+    clientId: process.env.VK_ADS_CLIENT_ID!,
+    clientSecret: process.env.VK_ADS_CLIENT_SECRET!,
+    // Legacy API token (optional, for backward compatibility)
+    apiToken: process.env.VK_ADS_API_TOKEN || '',
+    // API endpoints
     fastStatUrl: 'https://ads.vk.com/api/v3/statistics/faststat/banners.json',
     summaryUrl: 'https://ads.vk.com/api/v2/statistics/banners/summary.json',
   },
@@ -23,7 +28,7 @@ export const config = {
   },
 } as const;
 
-const requiredEnvVars = ['VK_ADS_API_TOKEN', 'POSTGRES_URI'];
+const requiredEnvVars = ['VK_ADS_CLIENT_ID', 'VK_ADS_CLIENT_SECRET', 'POSTGRES_URI'];
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {

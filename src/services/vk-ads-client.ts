@@ -1,5 +1,6 @@
 import { config } from '../config/index.js';
 import { logger } from './logger.js';
+import { TokenManager } from './token-manager.js';
 import {
   VKAdsFastStatResponse,
   VKAdsSummaryResponse,
@@ -14,13 +15,19 @@ import {
 } from '../types/vk-ads.types.js';
 
 export class VKAdsClient {
-  private readonly apiToken: string;
-  private readonly headers: Record<string, string>;
+  private readonly tokenManager: TokenManager;
 
   constructor() {
-    this.apiToken = config.vkAds.apiToken;
-    this.headers = {
-      Authorization: `Bearer ${this.apiToken}`,
+    this.tokenManager = new TokenManager(
+      config.vkAds.clientId,
+      config.vkAds.clientSecret
+    );
+  }
+
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const accessToken = await this.tokenManager.getAccessToken();
+    return {
+      Authorization: `Bearer ${accessToken}`,
     };
   }
 
@@ -32,9 +39,10 @@ export class VKAdsClient {
         url: config.vkAds.fastStatUrl,
       });
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(config.vkAds.fastStatUrl, {
         method: 'GET',
-        headers: this.headers,
+        headers,
       });
 
       if (!response.ok) {
@@ -70,9 +78,10 @@ export class VKAdsClient {
     try {
       logger.info('Fetching summary stats from VK Ads API', { url });
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.headers,
+        headers,
       });
 
       if (!response.ok) {
@@ -195,9 +204,10 @@ export class VKAdsClient {
 
       logger.debug(`Fetching paginated items`, { url: fullUrl, offset });
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(fullUrl, {
         method: 'GET',
-        headers: this.headers,
+        headers,
       });
 
       if (!response.ok) {
