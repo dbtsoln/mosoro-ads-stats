@@ -1,9 +1,9 @@
-version: '3.8'
 
 services:
   app:
     build: .
     container_name: mosoro-ads-stats
+
     env_file:
       - .env
     restart: unless-stopped
@@ -12,3 +12,5 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    networks:
+      dokploy-network:
