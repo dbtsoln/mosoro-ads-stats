@@ -33,7 +33,10 @@ COPY migrations ./migrations
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 && \
+    adduser -S nodejs -u 1001
+
+# Create data directory with correct permissions
+RUN mkdir -p /app/data && \
     chown -R nodejs:nodejs /app
 
 USER nodejs

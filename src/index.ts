@@ -5,6 +5,7 @@ import { Scheduler } from './services/scheduler.js';
 import { FastStatsRepository } from './database/repositories/fast-stats.repository.js';
 import { SummaryStatsRepository } from './database/repositories/summary-stats.repository.js';
 import { CampaignMetaRepository } from './database/repositories/campaign-meta.repository.js';
+import { CampaignHistoryRepository } from './database/repositories/campaign-history.repository.js';
 import { AdGroupMetaRepository } from './database/repositories/ad-group-meta.repository.js';
 import { BannerMetaRepository } from './database/repositories/banner-meta.repository.js';
 import { database } from './database/connection.js';
@@ -23,6 +24,15 @@ async function collectSummaryStats(
 ): Promise<void> {
   const summaryStats = await vkAdsClient.getSummaryStats();
   await summaryStatsRepo.insertBatch(summaryStats);
+}
+
+async function updateCampaignHistory(
+  vkAdsClient: VKAdsClient,
+  campaignHistoryRepo: CampaignHistoryRepository
+): Promise<void> {
+  const lastUpdate = await campaignHistoryRepo.getLastUpdatedAt();
+  const campaignHistory = await vkAdsClient.getCampaignHistory(lastUpdate || undefined);
+  await campaignHistoryRepo.upsertBatch(campaignHistory);
 }
 
 async function updateMetadata(
@@ -74,6 +84,7 @@ async function startService() {
     const fastStatsRepo = new FastStatsRepository();
     const summaryStatsRepo = new SummaryStatsRepository();
     const campaignMetaRepo = new CampaignMetaRepository();
+    const campaignHistoryRepo = new CampaignHistoryRepository();
     const adGroupMetaRepo = new AdGroupMetaRepository();
     const bannerMetaRepo = new BannerMetaRepository();
     const scheduler = new Scheduler();
@@ -97,6 +108,13 @@ async function startService() {
       config.scheduler.metadataUpdateInterval,
       () => updateMetadata(vkAdsClient, campaignMetaRepo, adGroupMetaRepo, bannerMetaRepo),
       'Metadata Update',
+      true
+    );
+
+    scheduler.schedule(
+      config.scheduler.metadataUpdateInterval,
+      () => updateCampaignHistory(vkAdsClient, campaignHistoryRepo),
+      'Campaign History Update',
       true
     );
 

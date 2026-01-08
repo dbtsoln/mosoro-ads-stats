@@ -10,6 +10,7 @@ import {
   VKAdsAdGroupResponse,
   VKAdsBannerResponse,
   CampaignMetaRecord,
+  CampaignHistoryRecord,
   AdGroupMetaRecord,
   BannerMetaRecord,
 } from '../types/vk-ads.types.js';
@@ -274,6 +275,50 @@ export class VKAdsClient {
       return records;
     } catch (error) {
       logger.error('Failed to fetch campaigns', {
+        error: error instanceof Error ? error.message : String(error),
+        duration: Date.now() - startTime,
+      });
+      throw error;
+    }
+  }
+
+  async getCampaignHistory(since?: Date): Promise<CampaignHistoryRecord[]> {
+    const startTime = Date.now();
+
+    try {
+      const query: Record<string, string> = {
+        fields: ['id', 'status', 'price', 'delivery', 'updated'].join(','),
+        _status__in: ['active', 'blocked'].join(','),
+      };
+
+      if (since) {
+        query._updated__gt = this.formatDateForApi(since);
+        logger.info('Fetching campaign history from VK Ads API (incremental)', { since: query._updated__gt });
+      } else {
+        logger.info('Fetching campaign history from VK Ads API (full)');
+      }
+
+      const items = await this.fetchPaginatedItems<
+        VKAdsCampaignResponse['items'][0]
+      >('https://ads.vk.com/api/v2/ad_plans.json', query);
+
+      const records = items.map((item) => ({
+        id: parseInt(item.id, 10),
+        bid: item.price ? parseFloat(item.price) : null,
+        delivery: item.delivery || null,
+        status: item.status || 'unknown',
+        updatedAt: item.updated ? new Date(item.updated) : new Date(),
+      }));
+
+      const duration = Date.now() - startTime;
+      logger.info('Campaign history fetched successfully', {
+        duration,
+        recordsCount: records.length,
+      });
+
+      return records;
+    } catch (error) {
+      logger.error('Failed to fetch campaign history', {
         error: error instanceof Error ? error.message : String(error),
         duration: Date.now() - startTime,
       });

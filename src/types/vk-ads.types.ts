@@ -45,6 +45,9 @@ export interface VKAdsCampaignResponse {
     id: string;
     name: string;
     status?: string;
+    price?: string;
+    delivery?: string;
+    updated?: string;
   }>;
   error?: {
     message: string;
@@ -83,6 +86,14 @@ export interface CampaignMetaRecord {
   id: number;
   name: string;
   status: string;
+}
+
+export interface CampaignHistoryRecord {
+  id: number;
+  bid: number | null;
+  delivery: string | null;
+  status: string;
+  updatedAt: Date;
 }
 
 export interface AdGroupMetaRecord {
