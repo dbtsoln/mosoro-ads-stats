@@ -150,44 +150,49 @@ export class TokenManager {
   }
 
   async ensureValidToken(): Promise<string> {
+    // Check if token is still valid
     if (!this.isTokenExpired()) {
       return this.tokenData!.access_token;
     }
 
-    // If a refresh is already in progress, wait for it
-    if (this.refreshPromise) {
-      logger.debug('Token refresh already in progress, waiting...');
-      await this.refreshPromise;
-      return this.tokenData!.access_token;
+    // Atomically check and create promise - no awaits between check and set
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.performTokenRefresh();
     }
 
+    // Wait for the refresh (either one we just created or one in progress)
+    try {
+      await this.refreshPromise;
+    } catch (error) {
+      // Error is logged in performTokenRefresh, just propagate
+      throw error;
+    }
+
+    return this.tokenData!.access_token;
+  }
+
+  private async performTokenRefresh(): Promise<TokenData> {
     logger.info('Token expired or missing, refreshing...');
 
-    // Create a refresh promise to prevent concurrent refreshes
-    this.refreshPromise = (async () => {
-      try {
-        // Try to refresh if we have a refresh token
-        if (this.tokenData?.refresh_token) {
-          return await this.fetchToken('refresh_token');
-        } else {
-          // Otherwise get new token with client credentials
-          return await this.fetchToken('client_credentials');
-        }
-      } catch (error) {
-        logger.warn('Token refresh failed, trying client credentials', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-
-        // If refresh fails, fall back to client credentials
+    try {
+      // Try to refresh if we have a refresh token
+      if (this.tokenData?.refresh_token) {
+        return await this.fetchToken('refresh_token');
+      } else {
+        // Otherwise get new token with client credentials
         return await this.fetchToken('client_credentials');
-      } finally {
-        // Clear the refresh promise when done
-        this.refreshPromise = null;
       }
-    })();
+    } catch (error) {
+      logger.warn('Token refresh failed, trying client credentials', {
+        error: error instanceof Error ? error.message : String(error),
+      });
 
-    await this.refreshPromise;
-    return this.tokenData!.access_token;
+      // If refresh fails, fall back to client credentials
+      return await this.fetchToken('client_credentials');
+    } finally {
+      // Clear the refresh promise when done
+      this.refreshPromise = null;
+    }
   }
 
   async getAccessToken(): Promise<string> {
