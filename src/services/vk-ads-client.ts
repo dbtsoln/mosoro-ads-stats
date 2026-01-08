@@ -32,6 +32,35 @@ export class VKAdsClient {
     };
   }
 
+  private async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+    let headers = await this.getAuthHeaders();
+    let response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...headers,
+      },
+    });
+
+    // If we get 401, the token might be invalid - invalidate and retry once
+    if (response.status === 401) {
+      logger.warn('Got 401 Unauthorized, invalidating token and retrying', { url });
+      this.tokenManager.invalidateToken();
+
+      // Get fresh token and retry
+      headers = await this.getAuthHeaders();
+      response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          ...headers,
+        },
+      });
+    }
+
+    return response;
+  }
+
   async getFastStats(): Promise<FastStatRecord[]> {
     const startTime = Date.now();
 
@@ -40,10 +69,8 @@ export class VKAdsClient {
         url: config.vkAds.fastStatUrl,
       });
 
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(config.vkAds.fastStatUrl, {
+      const response = await this.fetchWithAuth(config.vkAds.fastStatUrl, {
         method: 'GET',
-        headers,
       });
 
       if (!response.ok) {
@@ -79,10 +106,8 @@ export class VKAdsClient {
     try {
       logger.info('Fetching summary stats from VK Ads API', { url });
 
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(url, {
+      const response = await this.fetchWithAuth(url, {
         method: 'GET',
-        headers,
       });
 
       if (!response.ok) {
@@ -205,10 +230,8 @@ export class VKAdsClient {
 
       logger.debug(`Fetching paginated items`, { url: fullUrl, offset });
 
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(fullUrl, {
+      const response = await this.fetchWithAuth(fullUrl, {
         method: 'GET',
-        headers,
       });
 
       if (!response.ok) {

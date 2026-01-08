@@ -53,9 +53,14 @@ export class TokenManager {
       if (existsSync(this.tokenCachePath)) {
         const data = readFileSync(this.tokenCachePath, 'utf-8');
         this.tokenData = JSON.parse(data);
+        const isExpired = this.isTokenExpired();
         logger.info('Token loaded from cache', {
           expiresAt: new Date(this.tokenData!.expires_at).toISOString(),
+          isExpired,
+          timeUntilExpiry: this.tokenData!.expires_at - Date.now(),
         });
+      } else {
+        logger.info('No token cache found, will fetch new token');
       }
     } catch (error) {
       logger.warn('Failed to load token from cache', {
@@ -152,6 +157,9 @@ export class TokenManager {
   async ensureValidToken(): Promise<string> {
     // Check if token is still valid
     if (!this.isTokenExpired()) {
+      logger.debug('Using cached token', {
+        expiresAt: new Date(this.tokenData!.expires_at).toISOString(),
+      });
       return this.tokenData!.access_token;
     }
 
@@ -169,6 +177,12 @@ export class TokenManager {
     }
 
     return this.tokenData!.access_token;
+  }
+
+  invalidateToken(): void {
+    logger.info('Invalidating current token');
+    this.tokenData = null;
+    this.refreshPromise = null;
   }
 
   private async performTokenRefresh(): Promise<TokenData> {
