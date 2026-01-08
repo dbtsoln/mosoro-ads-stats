@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { logger } from './logger.js';
 
@@ -35,7 +35,6 @@ export class TokenManager {
 
   private ensureCacheDir(dir: string): void {
     try {
-      const { mkdirSync, existsSync } = require('fs');
       if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true });
         logger.info('Created cache directory', { dir });
