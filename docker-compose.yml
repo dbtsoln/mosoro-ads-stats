@@ -8,8 +8,8 @@ services:
       - .env
 
     volumes:
-      # Mount data directory for token cache and other persistent data
-      - ./data:/app/data
+      # Use named volume for token cache and other persistent data
+      - app-data:/app/data
 
     restart: unless-stopped
     logging:
@@ -20,6 +20,8 @@ services:
     networks:
       dokploy-network:
 
+volumes:
+  app-data:
 
 networks:
   dokploy-network:
