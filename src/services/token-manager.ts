@@ -182,7 +182,8 @@ export class TokenManager {
   invalidateToken(): void {
     logger.info('Invalidating current token');
     this.tokenData = null;
-    this.refreshPromise = null;
+    // Don't clear refreshPromise - if a refresh is in progress, let it continue
+    // This prevents multiple concurrent 401s from all starting new refresh attempts
   }
 
   private async performTokenRefresh(): Promise<TokenData> {
