@@ -47,6 +47,7 @@ export interface VKAdsCampaignResponse {
     status?: string;
     price?: string;
     delivery?: string;
+    created?: string;
     updated?: string;
   }>;
   error?: {
@@ -93,6 +94,7 @@ export interface CampaignHistoryRecord {
   bid: number | null;
   delivery: string | null;
   status: string;
+  createdAt: Date;
   updatedAt: Date;
 }
 

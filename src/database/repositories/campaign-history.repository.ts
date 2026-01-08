@@ -38,13 +38,14 @@ export class CampaignHistoryRepository {
 
     try {
       const query = `
-        INSERT INTO "CampaignHistory" ("Id", "Bid", "Delivery", "Status", "UpdatedAt")
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO "CampaignHistory" ("Id", "Bid", "Delivery", "Status", "CreatedAt", "UpdatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT ("Id", "UpdatedAt")
         DO UPDATE SET
           "Bid" = EXCLUDED."Bid",
           "Delivery" = EXCLUDED."Delivery",
-          "Status" = EXCLUDED."Status"
+          "Status" = EXCLUDED."Status",
+          "CreatedAt" = EXCLUDED."CreatedAt"
       `;
 
       const client = await this.pool.connect();
@@ -58,6 +59,7 @@ export class CampaignHistoryRepository {
             record.bid,
             record.delivery,
             record.status,
+            record.createdAt,
             record.updatedAt,
           ]);
         }

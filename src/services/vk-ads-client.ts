@@ -310,7 +310,7 @@ export class VKAdsClient {
 
     try {
       const query: Record<string, string> = {
-        fields: ['id', 'status', 'price', 'delivery', 'updated'].join(','),
+        fields: ['id', 'status', 'price', 'delivery', 'created', 'updated'].join(','),
         _status__in: ['active', 'blocked'].join(','),
       };
 
@@ -330,6 +330,7 @@ export class VKAdsClient {
         bid: item.price ? parseFloat(item.price) : null,
         delivery: item.delivery || null,
         status: item.status || 'unknown',
+        createdAt: item.created ? new Date(item.created) : new Date(),
         updatedAt: item.updated ? new Date(item.updated) : new Date(),
       }));
 
